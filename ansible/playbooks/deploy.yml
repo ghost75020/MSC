@@ -1,0 +1,43 @@
+---
+- name: Deploy Wazuh SOC Stack to Docker Swarm
+  hosts: swarm_managers
+  gather_facts: no
+  vars:
+    ansible_user: runnerv2
+
+  tasks:
+    - name: Ensure Docker Swarm is initialized (on the first manager)
+      community.docker.docker_swarm:
+        state: present
+      run_once: true
+
+    - name: Create the frontend overlay network for Traefik
+      community.docker.docker_network:
+        name: "frontend_net"
+        driver: overlay
+        state: present
+
+    - name: Create the backend overlay network for Wazuh
+      community.docker.docker_network:
+        name: "backend_net"
+        driver: overlay
+        state: present
+
+    - name: Create Wazuh admin user secret in Docker Swarm
+      community.docker.docker_secret:
+        name: "wazuh_admin_user"
+        data: "{{ wazuh_admin_user }}"
+        state: present
+
+    - name: Create Wazuh admin password secret in Docker Swarm
+      community.docker.docker_secret:
+        name: "wazuh_admin_password"
+        data: "{{ wazuh_admin_password }}"
+        state: present
+
+    - name: Deploy Wazuh stack from compose file
+      community.docker.docker_stack:
+        state: present
+        name: "wazuh_soc"
+        compose:
+          - "{{ playbook_dir }}/../../stack/wazuh-stack.yml"
