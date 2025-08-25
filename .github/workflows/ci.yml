@@ -1,0 +1,79 @@
+name: CI/CD Wazuh SOC Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # Job 1: Vérifier la qualité du code
+  lint:
+    name: Lint Code
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install linters
+        run: pip3 install yamllint ansible-lint
+
+      - name: Run yamllint
+        run: yamllint .
+
+      - name: Run ansible-lint
+        run: ansible-lint ansible/playbooks/
+
+  # Job 2: Construire et Scanner (à compléter)
+  scan:
+    name: Scan for Vulnerabilities
+    needs: lint
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan wazuh/wazuh-dashboard image with Trivy
+        run: |
+          echo "Étape de scan Trivy à implémenter ici."
+          # Commande future : trivy image --exit-code 1 --severity CRITICAL,HIGH wazuh/wazuh-dashboard:4.7.4
+          echo "Scan réussi (placeholder)"
+
+  # Job 3: Tester l'application (à compléter)
+  test:
+    name: Run Selenium UI Tests
+    needs: scan
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Selenium tests
+        run: |
+          echo "Étape de test Selenium à implémenter ici."
+          echo "Tests réussis (placeholder)"
+
+  # Job 4: Déployer en production
+  deploy:
+    name: Deploy to Production
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Activate Python venv and Deploy
+        
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.VAULT_PASSWORD }}
+        run: |
+          # La variable est maintenant disponible pour toutes les commandes ci-dessous
+          source $GITHUB_WORKSPACE/ansible_env/bin/activate
+          
+          echo "$ANSIBLE_VAULT_PASSWORD" > vault_pass.txt
+
+          ansible-playbook -i ansible/inventories/production.ini ansible/playbooks/deploy.yml --vault-password-file vault_pass.txt
+
+          rm vault_pass.txt
