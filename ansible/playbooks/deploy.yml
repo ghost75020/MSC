@@ -13,19 +13,23 @@
         path: /home/runnerv2/configs
         state: directory
         mode: '0755'
+
     - name: Copy Wazuh stack file to the manager node
       ansible.builtin.copy:
-        src: ../../stack/wazuh-stack.yml
+        src: ../stack/wazuh-stack.yml # Chemin corrigé
         dest: /home/runnerv2/configs/wazuh-stack.yml
+
     - name: Copy Wazuh dashboard config file to the manager node
       ansible.builtin.copy:
-        src: ../../stack/configs/wazuh-dashboard.yml
+        src: ../stack/configs/wazuh-dashboard.yml # Chemin corrigé
         dest: /home/runnerv2/configs/wazuh-dashboard.yml
+
     - name: Create Wazuh dashboard config object in Docker Swarm
       community.docker.docker_config:
         name: "wazuh_dashboard_config"
-        data: "{{ lookup('file', '../../stack/configs/wazuh-dashboard.yml') }}"
+        data: "{{ lookup('file', '../../ansible/stack/configs/wazuh-dashboard.yml') }}" # Chemin corrigé
         state: present
+
     - name: Deploy/Update Wazuh Stack
       community.docker.docker_stack:
         state: present
@@ -33,6 +37,7 @@
         compose:
           - /home/runnerv2/configs/wazuh-stack.yml
       register: stack_deployment_result
+
     - name: Initialize/Update Wazuh Indexer Security Configuration
       ansible.builtin.shell: >
         docker exec
