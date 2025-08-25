@@ -1,9 +1,11 @@
 ---
 - name: Deploy Wazuh SOC Stack to Docker Swarm
   hosts: swarm_managers
-  gather_facts: no
+  gather_facts: false
   vars:
     ansible_user: runnerv2
+  vars_files:
+    - ../vault.yml
 
   tasks:
     - name: Ensure Docker Swarm is initialized (on the first manager)
@@ -35,9 +37,39 @@
         data: "{{ wazuh_admin_password }}"
         state: present
 
-    - name: Deploy Wazuh stack from compose file
+    - name: Create Wazuh dashboard config object in Docker Swarm
+      community.docker.docker_config:
+        name: "wazuh_dashboard_config"
+        data: "{{ lookup('file', '../stack/configs/wazuh-dashboard.yml') }}"
+        state: present
+
+    - name: Copy Wazuh stack compose file to swarm manager
+      copy:
+        src: "{{ playbook_dir }}/../stack/wazuh-stack.yml"
+        dest: /home/runnerv2/wazuh-stack.yml
+        mode: '0644'
+
+    - name: Deploy Wazuh stack from compose file on the manager
       community.docker.docker_stack:
         state: present
         name: "wazuh_soc"
         compose:
-          - "{{ playbook_dir }}/../../stack/wazuh-stack.yml"
+          - "/home/runnerv2/wazuh-stack.yml"
+      register: stack_deployment_result
+      
+    - name: Initialize/Update Wazuh Indexer Security Configuration
+      ansible.builtin.shell: >
+        docker exec
+        $(docker ps --filter "name=wazuh_soc_wazuh-indexer" -q)
+        bash -c "JAVA_HOME=/usr/share/wazuh-indexer/jdk bash /usr/share/wazuh-indexer/plugins/opensearch-security/tools/securityadmin.sh
+        -cd /usr/share/wazuh-indexer/opensearch-security/
+        -nhnv
+        -cacert /usr/share/wazuh-indexer/certs/root-ca.pem
+        -cert /usr/share/wazuh-indexer/certs/admin.pem
+        -key /usr/share/wazuh-indexer/certs/admin-key.pem"
+      register: security_admin_result
+      until: security_admin_result.rc == 0
+      retries: 5
+      delay: 10
+      changed_when: "'DONE' in security_admin_result.stdout"
+      # when: stack_deployment_result.changed

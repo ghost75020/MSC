@@ -1,0 +1,11 @@
+---
+- name: Debug Variables for Host
+  hosts: swarm_managers
+  gather_facts: false
+  vars:
+    ansible_user: runnerv2
+
+  tasks:
+    - name: Display all known variables for the host
+      ansible.builtin.debug:
+        var: hostvars[inventory_hostname]
