@@ -1,0 +1,6 @@
+extends: default
+ignore: |
+  ansible_env/
+rules:
+  line-length:
+    max: 160

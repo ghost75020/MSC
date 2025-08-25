@@ -14,10 +14,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Install linters
         run: pip3 install yamllint ansible-lint
+
       - name: Run yamllint
         run: yamllint .
+
       - name: Run ansible-lint
         run: ansible-lint ansible/playbooks/
 
@@ -28,6 +31,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Scan wazuh/wazuh-dashboard image with Trivy
         run: |
           echo "Étape de scan Trivy à implémenter ici."
@@ -40,6 +44,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Run Selenium tests
         run: |
           echo "Étape de test Selenium à implémenter ici."
@@ -49,10 +54,12 @@ jobs:
     name: Deploy to Production
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
     runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Activate Python venv and Deploy
         env:
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.VAULT_PASSWORD }}
