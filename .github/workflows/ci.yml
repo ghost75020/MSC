@@ -67,7 +67,7 @@ jobs:
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.VAULT_PASSWORD }}
         run: |
           source $GITHUB_WORKSPACE/ansible_env/bin/activate
-          
+
           echo "$ANSIBLE_VAULT_PASSWORD" > vault_pass.txt
 
           ansible-playbook -i ansible/inventories/production.ini ansible/playbooks/deploy.yml --vault-password-file vault_pass.txt
