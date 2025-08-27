@@ -1,5 +1,5 @@
+---
 version: '3.8'
-
 services:
   traefik:
     image: traefik:v2.10
@@ -23,8 +23,7 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     deploy:
       placement:
-        constraints: [ "node.role == manager" ]
-
+        constraints: ["node.role == manager"]
   wazuh-indexer:
     image: wazuh/wazuh-indexer:4.7.4
     networks:
@@ -33,7 +32,6 @@ services:
       - wazuh-indexer-data:/var/lib/wazuh-indexer
     deploy:
       replicas: 1
-
   wazuh-manager:
     image: wazuh/wazuh-manager:4.7.4
     networks:
@@ -44,7 +42,6 @@ services:
       - wazuh-indexer
     deploy:
       replicas: 1
-
   wazuh-dashboard:
     image: wazuh/wazuh-dashboard:4.7.4
     environment:
@@ -78,24 +75,20 @@ services:
         - "traefik.http.routers.wazuh.tls.certresolver=letsencrypt"
         - "traefik.http.services.wazuh.loadbalancer.server.port=5601"
         - "traefik.docker.network=frontend_net"
-
 volumes:
   wazuh-indexer-data:
   wazuh-manager-data:
   traefik-certs:
-
 networks:
   frontend_net:
     external: true
   backend_net:
     external: true
-
 secrets:
   wazuh_admin_user:
     external: true
   wazuh_admin_password:
     external: true
-
 configs:
   wazuh_dashboard_config:
     external: true
