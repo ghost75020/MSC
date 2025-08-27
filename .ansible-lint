@@ -2,3 +2,5 @@
 exclude_paths:
   - ansible_env/
   - actions-runner/
+  - ansible/playbooks/teardown.yml
+  - ansible/vault.yml
