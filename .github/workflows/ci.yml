@@ -14,23 +14,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Install linters
         run: pip3 install yamllint ansible-lint
-
       - name: Run yamllint
         run: yamllint .
-
       - name: Run ansible-lint
-        env:
-          # On donne un faux mot de passe juste pour que le linter puisse passer
-          ANSIBLE_VAULT_PASSWORD: "lint-password"
-        run: |
-          echo "$ANSIBLE_VAULT_PASSWORD" > .vault_pass_lint.txt
-          ansible-lint ansible/playbooks/ --vault-password-file .vault_pass_lint.txt
-          rm .vault_pass_lint.txt
+        run: ansible-lint --exclude ansible/vault.yml
 
-  # ... (Le reste des jobs scan, test, deploy ne change pas) ...
   scan:
     name: Scan for Vulnerabilities
     needs: lint
@@ -42,6 +32,7 @@ jobs:
         run: |
           echo "Étape de scan Trivy à implémenter ici."
           echo "Scan réussi (placeholder)"
+
   test:
     name: Run Selenium UI Tests
     needs: scan
@@ -53,6 +44,7 @@ jobs:
         run: |
           echo "Étape de test Selenium à implémenter ici."
           echo "Tests réussis (placeholder)"
+
   deploy:
     name: Deploy to Production
     needs: test
