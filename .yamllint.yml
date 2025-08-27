@@ -1,0 +1,17 @@
+---
+extends: default
+
+ignore: |
+  .git/
+  ansible_env/
+  actions-runner/
+
+rules:
+  line-length:
+    max: 160
+  truthy: disable
+  comments:
+    min-spaces-from-content: 1
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 0
