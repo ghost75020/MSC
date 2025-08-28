@@ -1,7 +1,7 @@
 ---
 - name: Deploy Wazuh SOC Stack to Docker Swarm
   hosts: swarm_managers
-  gather_facts: no
+  gather_facts: false
   vars:
     ansible_user: runnerv2
   vars_files:
@@ -16,18 +16,18 @@
 
     - name: Copy Wazuh stack file to the manager node
       ansible.builtin.copy:
-        src: ../stack/wazuh-stack.yml # Chemin corrigé
+        src: ../stack/wazuh-stack.yml
         dest: /home/runnerv2/configs/wazuh-stack.yml
 
     - name: Copy Wazuh dashboard config file to the manager node
       ansible.builtin.copy:
-        src: ../stack/configs/wazuh-dashboard.yml # Chemin corrigé
+        src: ../stack/configs/wazuh-dashboard.yml
         dest: /home/runnerv2/configs/wazuh-dashboard.yml
 
     - name: Create Wazuh dashboard config object in Docker Swarm
       community.docker.docker_config:
         name: "wazuh_dashboard_config"
-        data: "{{ lookup('file', '../../ansible/stack/configs/wazuh-dashboard.yml') }}" # Chemin corrigé
+        data: "{{ lookup('file', '../../ansible/stack/configs/wazuh-dashboard.yml') }}"
         state: present
 
     - name: Deploy/Update Wazuh Stack
