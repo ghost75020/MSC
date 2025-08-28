@@ -9,6 +9,8 @@ ignore: |
 rules:
   line-length:
     max: 160
+  document-start:
+    present: true
   truthy: disable
   comments:
     min-spaces-from-content: 1

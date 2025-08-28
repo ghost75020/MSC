@@ -18,7 +18,8 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--certificatesresolvers.letsencrypt.acme.email=black.ghost75020@gmail.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     deploy:
@@ -30,6 +31,17 @@ services:
       - backend_net
     volumes:
       - wazuh-indexer-data:/var/lib/wazuh-indexer
+    healthcheck:
+      test: >-
+        ["CMD-SHELL", "wget --no-check-certificate -qO- https://localhost:9200/_cluster/health?wait_for_status=yellow
+        -u admin:$$OPENSEARCH_PASSWORD_SECRET || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+    secrets:
+      - source: wazuh_admin_password
+        target: OPENSEARCH_PASSWORD_SECRET
     deploy:
       replicas: 1
   wazuh-manager:
@@ -38,15 +50,12 @@ services:
       - backend_net
     volumes:
       - wazuh-manager-data:/var/ossec/data
-    depends_on:
-      - wazuh-indexer
     deploy:
       replicas: 1
   wazuh-dashboard:
     image: wazuh/wazuh-dashboard:4.7.4
     environment:
       - WAZUH_API_URL=http://wazuh-manager:55000
-      - OPENSEARCH_SSL_VERIFICATION_MODE=none
     configs:
       - source: wazuh_dashboard_config
         target: /usr/share/wazuh-dashboard/config/opensearch_dashboards.yml
@@ -58,14 +67,11 @@ services:
         target: OPENSEARCH_USERNAME
       - source: wazuh_admin_password
         target: OPENSEARCH_PASSWORD
-    depends_on:
-      - wazuh-indexer
-      - wazuh-manager
     deploy:
       replicas: 1
       restart_policy:
         condition: on-failure
-        delay: 5s
+        delay: 10s
         max_attempts: 5
         window: 120s
       labels:

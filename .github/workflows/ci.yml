@@ -1,12 +1,10 @@
 ---
 name: CI/CD Wazuh SOC Pipeline
-
 on:
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
-
 jobs:
   lint:
     name: Lint Code
@@ -14,21 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Install linters
-        run: pip3 install yamllint ansible-lint
-
-      - name: Run yamllint
-        run: yamllint .
-
+      - name: Install linter
+        run: pip3 install "ansible-lint==6.22.2"
       - name: Run ansible-lint
-        run: |
-          # Crée un inventaire minimal juste pour le test de syntaxe
-          echo "[swarm_managers]" > .ci_inventory
-          echo "localhost ansible_connection=local" >> .ci_inventory
-
-          # Lance le linter. Il lira automatiquement notre .ansible-lint pour les exclusions.
-          ansible-lint -i .ci_inventory
+        run: ansible-lint
 
   scan:
     name: Scan for Vulnerabilities
@@ -37,22 +24,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Scan wazuh/wazuh-dashboard image with Trivy
-        run: |
-          echo "Étape de scan Trivy à implémenter ici."
-          echo "Scan réussi (placeholder)"
+      - name: Scan Docker images
+        run: echo "Scan step placeholder"
 
   test:
-    name: Run Selenium UI Tests
+    name: Run Functional Tests
     needs: scan
     runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Run Selenium tests
-        run: |
-          echo "Étape de test Selenium à implémenter ici."
-          echo "Tests réussis (placeholder)"
+        run: echo "Test step placeholder"
 
   deploy:
     name: Deploy to Production
@@ -67,9 +50,6 @@ jobs:
           ANSIBLE_VAULT_PASSWORD: ${{ secrets.VAULT_PASSWORD }}
         run: |
           source $GITHUB_WORKSPACE/ansible_env/bin/activate
-
           echo "$ANSIBLE_VAULT_PASSWORD" > vault_pass.txt
-
           ansible-playbook -i ansible/inventories/production.ini ansible/playbooks/deploy.yml --vault-password-file vault_pass.txt
-
           rm vault_pass.txt

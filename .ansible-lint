@@ -1,4 +1,6 @@
 ---
+offline: true
+use_default_rules: true
 exclude_paths:
   - ansible_env/
   - actions-runner/
